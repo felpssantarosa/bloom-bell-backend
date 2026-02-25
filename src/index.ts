@@ -11,10 +11,6 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
-/**
- * OAuth Callback
- * Discord redirects here after login
- */
 app.get("/callback", async (req: Request, res: Response) => {
 	const code = req.query.code;
 	const state = req.query.state;
@@ -35,13 +31,12 @@ app.get("/callback", async (req: Request, res: Response) => {
 			"✅ Your FFXIV plugin has been successfully linked!",
 		);
 
-		res.send("Account linked! You can close this window.");
+		res.json({ message: "Account linked! You can close this window." });
 	} catch (err) {
 		console.error("OAuth error:", err);
 		res.status(500).send("OAuth failed");
 	}
 });
-
 
 app.post("/notify", async (req: Request, res: Response) => {
 	const { pluginUserId, partySize, maxSize } = req.body as {
