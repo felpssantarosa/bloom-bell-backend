@@ -1,6 +1,6 @@
 {
-  "name": "warny-backend",
-  "version": "1.0.0",
+  "name": "bloom-bell-backend",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,16 +10,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/felpssantarosa/warny-backend.git"
+    "url": "git+https://github.com/felpssantarosa/bloom-bell-backend.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Senya",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/felpssantarosa/warny-backend/issues"
+    "url": "https://github.com/felpssantarosa/bloom-bell-backend/issues"
   },
-  "homepage": "https://github.com/felpssantarosa/warny-backend#readme",
+  "homepage": "https://github.com/felpssantarosa/bloom-bell-backend#readme",
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "discord.js": "^14.25.1",
