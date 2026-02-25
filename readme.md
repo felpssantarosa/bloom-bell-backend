@@ -26,7 +26,8 @@ REDIRECT_URI=http://localhost:3333/callback
 PORT=3333
 ```
 
-> WARNING: It is important that you setup the port and redirect URI correctly, as they are used in the OAuth flow. The redirect URI must match the one you set in your Discord application settings.
+>[!WARNING]
+>It is important that you setup the port and redirect URI correctly, as they are used in the OAuth flow. The redirect URI must match the one you set in your Discord application settings.
 
 3. Build the project to compile the TypeScript code
 
