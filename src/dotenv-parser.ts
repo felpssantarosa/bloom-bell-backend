@@ -8,4 +8,5 @@ export const dotenvConfig = {
 	DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN || "",
 	REDIRECT_URI: process.env.REDIRECT_URI || "",
 	PORT: process.env.PORT || "3333",
+	WS_PORT: process.env.WS_PORT || "3334",
 };
