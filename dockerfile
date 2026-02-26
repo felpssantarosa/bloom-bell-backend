@@ -1,5 +1,5 @@
 # ---------- 1. Builder stage ----------
-FROM node:20-slim AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN npm prune --omit=dev
 
 
 # ---------- 2. Runtime stage ----------
-FROM node:20-slim AS runtime
+FROM node:24-alpine AS runtime
 
 WORKDIR /app
 
