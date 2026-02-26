@@ -1,5 +1,5 @@
 import type WebsocketConnection from "ws";
-import type { InMemorySocket } from "../infra/inMemorySocketConnections.js";
+import type { InMemorySocket } from "../infra/InMemorySocketConnections.js";
 
 export class ClosedWebSocketHandlerService {
 	constructor(private readonly inMemorySocket: InMemorySocket) {}

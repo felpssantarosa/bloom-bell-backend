@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
 import type { DiscordIntegration } from "../services/DiscordIntegration.js";
-import type { InMemorySocket } from "../websocket/infra/inMemorySocketConnections.js";
+import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnections.js";
 
 export class CallbackController {
 	constructor(

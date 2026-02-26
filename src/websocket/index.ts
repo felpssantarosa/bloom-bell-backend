@@ -1,7 +1,7 @@
 import type WebSocket from "ws";
 import { WebSocketServer } from "ws";
 import type { RegisterUserController } from "./controllers/RegisterUserController.js";
-import { websocketMessageParser } from "./message-parser.js";
+import { websocketMessageParser } from "./MessageParser.js";
 
 export class WebsocketManager {
 	private readonly webSocketServer: WebSocketServer;

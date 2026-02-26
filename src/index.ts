@@ -3,7 +3,7 @@ import {
 	discordIntegration,
 	router,
 	websocketManager,
-} from "./depedency-injection.js";
+} from "./DepedencyInjection.js";
 import { dotenvConfig } from "./services/DotEnvParser.js";
 
 const app = express();

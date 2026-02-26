@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
 import type { DiscordIntegration } from "../services/DiscordIntegration.js";
-import type { InMemorySocket } from "../websocket/infra/inMemorySocketConnections.js";
-import { CallbackController } from "./callback.js";
-import { NotifyController } from "./notify.js";
+import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnections.js";
+import { CallbackController } from "./CallbackRoute.js";
+import { NotifyController } from "./NotifyRoute.js";
 
 export class Router {
 	constructor(

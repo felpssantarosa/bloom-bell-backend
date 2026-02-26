@@ -4,7 +4,7 @@ import { DiscordIntegration } from "./services/DiscordIntegration.js";
 import { dotenvConfig } from "./services/DotEnvParser.js";
 import { RegisterUserController } from "./websocket/controllers/RegisterUserController.js";
 import { WebsocketManager } from "./websocket/index.js";
-import { InMemorySocket } from "./websocket/infra/inMemorySocketConnections.js";
+import { InMemorySocket } from "./websocket/infra/InMemorySocketConnections.js";
 import { ClosedWebSocketHandlerService } from "./websocket/services/ClosedWebSocketHandlerService.js";
 import { RegisterUserService } from "./websocket/services/RegisterUserService.js";
 import { RegisterWebSocketService } from "./websocket/services/RegisterWebSocketConnection.js";
