@@ -1,6 +1,6 @@
 # 🌸 Bloom Bell Backend
 
-**Required server to run the [Bloom Bell](https://github.com/felpssantarosa/bloom-bell-backend) plugin.** It handles authentication and communication between the integrated applications and the user's plugin.
+**Required server to run the [Bloom Bell](https://github.com/felpssantarosa/bloom-bell) plugin.** It handles authentication and communication between the integrated applications and the user's plugin.
 
 ---
 
