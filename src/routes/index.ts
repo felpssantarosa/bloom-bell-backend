@@ -23,8 +23,7 @@ export class Router {
 			this.sqliteRepository,
 			this.discordIntegration,
 		);
-
-		app.use("/callback", callbackController.execute);
-		app.use("/notify", notifyController.execute);
+		app.get("/callback", (req, res) => callbackController.execute(req, res));
+		app.post("/notify", (req, res) => notifyController.execute(req, res));
 	}
 }
