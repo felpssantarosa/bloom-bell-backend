@@ -1,20 +1,17 @@
 import express from "express";
-import { SQLiteRepository } from "./infra/SQLiteRepository.js";
-import { Router } from "./routes/index.js";
-import { DiscordIntegration } from "./services/DiscordIntegration.js";
+import {
+	discordIntegration,
+	router,
+	websocketManager,
+} from "./depedency-injection.js";
 import { dotenvConfig } from "./services/DotEnvParser.js";
-import { InMemorySocket } from "./websocket/infra/inMemorySocketConnections.js";
 
 const app = express();
 const APP_PORT = Number(dotenvConfig.PORT) || 3000;
 const WS_PORT = Number(dotenvConfig.WS_PORT) || 3334;
 
+websocketManager.start();
 app.use(express.json());
-
-const discordIntegration = new DiscordIntegration();
-const sqliteRepository = new SQLiteRepository();
-const inMemorySocket = new InMemorySocket();
-const router = new Router(sqliteRepository, inMemorySocket, discordIntegration);
 
 router.registerRoutes(app);
 

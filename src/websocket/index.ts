@@ -1,19 +1,17 @@
 import type WebSocket from "ws";
 import { WebSocketServer } from "ws";
-import { dotenvConfig } from "../services/DotEnvParser.js";
 import type { RegisterUserController } from "./controllers/RegisterUserController.js";
 import { websocketMessageParser } from "./message-parser.js";
 
 export class WebsocketManager {
-	private readonly WS_PORT = Number(dotenvConfig.WS_PORT) || 3334;
 	private readonly webSocketServer: WebSocketServer;
 	private readonly Router;
 
 	constructor(
-		private readonly RegisterUserController: RegisterUserController
+		private readonly RegisterUserController: RegisterUserController,
+		private readonly WS_PORT: number,
 	) {
 		this.webSocketServer = new WebSocketServer({ port: this.WS_PORT });
-
 		this.Router = {
 			register: this.RegisterUserController,
 		};
