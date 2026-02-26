@@ -2,4 +2,4 @@
 .env
 /dist
 data.sqlite
-data/data.sqlite
+data/database.sqlite
