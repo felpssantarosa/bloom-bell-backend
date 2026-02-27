@@ -1,6 +1,7 @@
 services:
   backend:
     container_name: bloom-bell-backend
+    image: felipessdev/bloom-bell-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
