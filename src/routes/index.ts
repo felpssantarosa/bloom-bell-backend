@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
+import { apiKeyAuth } from "../middleware/apiKeyAuth.js";
 import type { DiscordIntegration } from "../services/DiscordIntegration.js";
 import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnections.js";
 import { CallbackController } from "./CallbackRoute.js";
@@ -28,7 +29,9 @@ export class Router {
 		const platformsController = new PlatformsController(this.sqliteRepository);
 
 		app.get("/callback", (req, res) => callbackController.execute(req, res));
-		app.post("/notify", (req, res) => notifyController.execute(req, res));
+		app.post("/notify", apiKeyAuth, (req, res) =>
+			notifyController.execute(req, res),
+		);
 		app.get("/platforms", (req, res) => platformsController.execute(req, res));
 	}
 }

@@ -30,6 +30,8 @@ DISCORD_CLIENT_SECRET=YOUR-CLIENT-SECRET-HERE
 DISCORD_BOT_TOKEN=YOUR-BOT-TOKEN-HERE
 REDIRECT_URI=http://localhost:3333/callback
 PORT=3333
+API_KEY=your-api-key-at-least-16-chars
+ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 > [!WARNING]
@@ -37,6 +39,12 @@ PORT=3333
 
 > [!WARNING]
 > Do not put quotation marks around the values in the .env file. It breaks the parsing when using Docker.
+
+> [!NOTE]
+> `API_KEY` is required and must be at least 16 characters. It protects the `/notify` endpoint. Send it as `X-API-Key` header.
+
+> [!NOTE]
+> `ALLOWED_ORIGINS` is a comma-separated list of allowed CORS origins. Leave empty to disable CORS (deny all cross-origin).
 
 ### 3. Run the project
 

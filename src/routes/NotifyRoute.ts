@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
 import type { DiscordIntegration } from "../services/DiscordIntegration.js";
+import { notifyBodySchema } from "../validation/schemas.js";
 
 export class NotifyController {
 	constructor(
@@ -9,15 +10,16 @@ export class NotifyController {
 	) {}
 
 	public async execute(req: Request, res: Response) {
-		const { pluginUserId, partySize, maxSize } = req.body as {
-			pluginUserId?: string;
-			partySize?: number;
-			maxSize?: number;
-		};
+		const parsed = notifyBodySchema.safeParse(req.body);
 
-		if (!pluginUserId) {
-			return res.status(400).json({ error: "Missing pluginUserId" });
+		if (!parsed.success) {
+			return res.status(400).json({
+				error: "Invalid request body",
+				details: parsed.error.issues.map((i) => i.message),
+			});
 		}
+
+		const { pluginUserId, partySize, maxSize } = parsed.data;
 
 		try {
 			const discordIdFound =
@@ -40,11 +42,11 @@ export class NotifyController {
 				message: "🎉 Your party is full! Time to queue!",
 			});
 
-			console.log(`Sent party full DM to ${discordIdFound}`);
+			console.log(`Sent party notification for user ${pluginUserId}`);
 
 			return res.json({ status: "Notification sent" });
 		} catch (err) {
-			console.error("Notify error:", err);
+			console.error("Notify error occurred: ", err);
 			return res.status(500).json({ error: "Internal server error" });
 		}
 	}

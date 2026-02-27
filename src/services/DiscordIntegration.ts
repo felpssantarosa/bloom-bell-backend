@@ -45,17 +45,13 @@ export class DiscordIntegration {
 		try {
 			const user = await this.discordClient.users.fetch(userId);
 
-			console.log(
-				`Attempting to send DM to user ${userId} with the message: ${message}`,
-			);
+			console.log(`Attempting to send DM to user ${userId}`);
 
 			await user.send(message);
 
-			console.log("DM sent to userId: ", userId);
+			console.log("DM sent successfully");
 		} catch (err) {
-			console.error(
-				`Failed to send DM to user with id: ${userId}, error: ${err}`,
-			);
+			console.error(`Failed to send DM to user: ${(err as Error).message}`);
 		}
 	}
 

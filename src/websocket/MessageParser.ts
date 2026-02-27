@@ -12,18 +12,35 @@ export const websocketMessageParser = (
 		else {
 			if (!Buffer.isBuffer(data)) {
 				text = Buffer.concat(data as Buffer[]).toString("utf8");
+			} else {
+				text = data.toString("utf8");
 			}
-
-			text = data.toString("utf8");
 		}
 
 		const message = JSON.parse(text) as WebsocketMessage;
 
-		console.log("📨 WS message received:", message);
+		if (
+			typeof message !== "object" ||
+			message === null ||
+			Array.isArray(message)
+		) {
+			return null;
+		}
+
+		if (typeof message.type !== "string") {
+			return null;
+		}
+
+		console.log("WS message received, type:", String(message.type));
 
 		return message;
 	} catch (err) {
-		console.error("Error parsing JSON from websocket message:", err);
+		console.error(
+			"Error parsing websocket message, data:",
+			data,
+			"error:",
+			(err as Error).message,
+		);
 		return null;
 	}
 };

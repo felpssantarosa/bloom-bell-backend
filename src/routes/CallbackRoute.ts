@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
 import type { DiscordIntegration } from "../services/DiscordIntegration.js";
+import { callbackQuerySchema } from "../validation/schemas.js";
 import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnections.js";
 
 export class CallbackController {
@@ -11,12 +12,16 @@ export class CallbackController {
 	) {}
 
 	public async execute(req: Request, res: Response) {
-		const code = req.query.code;
-		const pluginUserId = req.query.state;
+		const parsed = callbackQuerySchema.safeParse(req.query);
 
-		if (typeof code !== "string" || typeof pluginUserId !== "string") {
-			return res.status(400).send("Missing code or state");
+		if (!parsed.success) {
+			return res.status(400).json({
+				error: "Invalid request parameters",
+				details: parsed.error.issues.map((i) => i.message),
+			});
 		}
+
+		const { code, state: pluginUserId } = parsed.data;
 
 		try {
 			const { discordId } =
@@ -24,9 +29,7 @@ export class CallbackController {
 
 			this.sqliteRepository.linkUser(pluginUserId, discordId);
 
-			console.log(
-				`✅ Linked plugin user with ID ${pluginUserId} to the Discord user with ID ${discordId}`,
-			);
+			console.log(`Linked plugin user ${pluginUserId} to Discord account`);
 
 			await this.discordIntegration.sendDirectMessage({
 				userId: discordId,
@@ -44,10 +47,10 @@ export class CallbackController {
 					}),
 				);
 
-				console.log(`📡 Sent authComplete WS event to ${pluginUserId}`);
+				console.log(`Sent authComplete WS event to ${pluginUserId}`);
 			} else {
 				console.log(
-					`ℹ️ WS not active for ${pluginUserId}. Plugin will receive auth state on next register.`,
+					`WS not active for ${pluginUserId}. Plugin will receive auth state on next register.`,
 				);
 			}
 
@@ -55,8 +58,8 @@ export class CallbackController {
 				message: "Account linked! You can close this window.",
 			});
 		} catch (err) {
-			console.error("OAuth error:", err);
-			return res.status(500).send("OAuth failed");
+			console.error("OAuth callback error occurred: ", err);
+			return res.status(500).json({ error: "OAuth failed" });
 		}
 	}
 }
