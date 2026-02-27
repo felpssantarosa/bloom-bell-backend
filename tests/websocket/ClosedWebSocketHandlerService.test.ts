@@ -28,7 +28,6 @@ describe("ClosedWebSocketHandlerService", () => {
 
 		expect(mockWs.on).toHaveBeenCalledWith("close", expect.any(Function));
 
-		// Simulate close event
 		handlers.close?.();
 
 		expect(mockInMemorySocket.removeSocket).toHaveBeenCalledWith("user1");

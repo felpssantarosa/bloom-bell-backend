@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import WebSocket from "ws";
 import type { SQLiteRepository } from "../../src/infra/SQLiteRepository.js";
 import { CallbackController } from "../../src/routes/CallbackRoute.js";
 import type { DiscordIntegration } from "../../src/services/DiscordIntegration.js";
@@ -97,11 +98,13 @@ describe("CallbackController", () => {
 			username: "testuser",
 		});
 
-		const mockSocket = {
+		const mockSocket: Partial<WebSocket> = {
 			readyState: WebSocket.OPEN,
 			send: vi.fn(),
 		};
-		vi.mocked(mockInMemorySocket.getSocket).mockReturnValue(mockSocket as any);
+		vi.mocked(mockInMemorySocket.getSocket).mockReturnValue(
+			mockSocket as WebSocket,
+		);
 
 		await controller.execute(req as Request, res as Response);
 

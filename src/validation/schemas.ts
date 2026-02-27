@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 function sanitizeString(val: string): string {
-	// biome-ignore lint/suspicious/noControlCharactersInRegex: intentional removal of control chars
+	// biome-ignore lint/suspicious/noControlCharactersInRegex: <>
 	return val.trim().replace(/[\x00-\x1F\x7F]/g, "");
 }
 

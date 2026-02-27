@@ -3,3 +3,4 @@
 /dist
 data.sqlite
 data/database.sqlite
+coverage/

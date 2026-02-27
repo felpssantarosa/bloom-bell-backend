@@ -4,7 +4,7 @@ import type { RegisterUserController } from "./controllers/RegisterUserControlle
 import { websocketMessageParser } from "./MessageParser.js";
 
 const MAX_WS_CONNECTIONS = 1000;
-const MAX_MESSAGE_SIZE_BYTES = 4 * 1024; // 4 KB
+const MAX_MESSAGE_SIZE_BYTES = 4 * 1024;
 const HEARTBEAT_INTERVAL_MS = 30_000;
 
 export class WebsocketManager {
@@ -62,7 +62,7 @@ export class WebsocketManager {
 				);
 
 				let messageCount = 0;
-				const MESSAGE_RATE_LIMIT = 30; // max messages per interval
+				const MESSAGE_RATE_LIMIT = 30;
 				const RATE_LIMIT_WINDOW_MS = 60_000;
 
 				const rateLimitReset = setInterval(() => {

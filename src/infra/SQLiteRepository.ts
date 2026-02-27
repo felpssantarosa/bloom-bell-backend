@@ -5,8 +5,8 @@ export class SQLiteRepository {
 	private filePath: string;
 	private db: Database.Database;
 
-	constructor() {
-		this.filePath = path.resolve("data/database.sqlite");
+	constructor(dbPath?: string) {
+		this.filePath = dbPath ?? path.resolve("data/database.sqlite");
 		this.db = new Database(this.filePath);
 
 		this.db.exec(`

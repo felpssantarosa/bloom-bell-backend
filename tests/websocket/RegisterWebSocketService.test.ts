@@ -61,4 +61,16 @@ describe("RegisterWebSocketService", () => {
 		expect(mockWs.close).not.toHaveBeenCalled();
 		expect(mockInMemorySocket.removeSocket).not.toHaveBeenCalled();
 	});
+
+	it("handles error when closing existing socket", () => {
+		vi.mocked(mockInMemorySocket.getSocket).mockReturnValue(mockOldWs);
+		vi.mocked(mockOldWs.close).mockImplementation(() => {
+			throw new Error("Socket already closed");
+		});
+
+		expect(() => service.execute("user1", mockWs)).not.toThrow();
+
+		expect(mockInMemorySocket.removeSocket).toHaveBeenCalledWith("user1");
+		expect(mockInMemorySocket.addSocket).toHaveBeenCalledWith("user1", mockWs);
+	});
 });

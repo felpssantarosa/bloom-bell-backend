@@ -5,23 +5,21 @@ import { SQLiteRepository } from "../../src/infra/SQLiteRepository.js";
 
 describe("SQLiteRepository", () => {
 	const testDbDir = path.resolve("data");
-	const testDbPath = path.resolve("data/database.sqlite");
+	const testDbPath = path.resolve("data/test-unit-repo.sqlite");
 	let repo: SQLiteRepository;
 
 	beforeEach(() => {
-		// Ensure the data directory exists
 		if (!fs.existsSync(testDbDir)) {
 			fs.mkdirSync(testDbDir, { recursive: true });
 		}
-		// Remove the DB file if it exists to get a clean slate
+
 		if (fs.existsSync(testDbPath)) {
 			fs.unlinkSync(testDbPath);
 		}
-		repo = new SQLiteRepository();
+		repo = new SQLiteRepository(testDbPath);
 	});
 
 	afterEach(() => {
-		// Clean up
 		if (fs.existsSync(testDbPath)) {
 			fs.unlinkSync(testDbPath);
 		}
@@ -66,6 +64,22 @@ describe("SQLiteRepository", () => {
 			repo.linkUser("user-linked", "discord-999");
 			const status = repo.getPlatformsStatusByUserId("user-linked");
 			expect(status).toEqual({ discord: true, telegram: false });
+		});
+	});
+
+	describe("constructor defaults", () => {
+		it("uses default database path when no argument is provided", () => {
+			const defaultRepo = new SQLiteRepository();
+
+			defaultRepo.linkUser("default-test", "disc-default");
+			expect(defaultRepo.getDiscordIdByPluginUserId("default-test")).toBe(
+				"disc-default",
+			);
+
+			const defaultPath = path.resolve("data/database.sqlite");
+			if (fs.existsSync(defaultPath)) {
+				fs.unlinkSync(defaultPath);
+			}
 		});
 	});
 });

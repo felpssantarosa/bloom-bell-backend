@@ -7,3 +7,4 @@ docker-compose.yml
 *.log
 .vscode
 .env
+coverage
