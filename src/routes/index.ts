@@ -4,6 +4,7 @@ import type { DiscordIntegration } from "../services/DiscordIntegration.js";
 import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnections.js";
 import { CallbackController } from "./CallbackRoute.js";
 import { NotifyController } from "./NotifyRoute.js";
+import { PlatformsController } from "./PlatformsRoute.js";
 
 export class Router {
 	constructor(
@@ -23,7 +24,11 @@ export class Router {
 			this.sqliteRepository,
 			this.discordIntegration,
 		);
+
+		const platformsController = new PlatformsController(this.sqliteRepository);
+
 		app.get("/callback", (req, res) => callbackController.execute(req, res));
 		app.post("/notify", (req, res) => notifyController.execute(req, res));
+		app.get("/platforms", (req, res) => platformsController.execute(req, res));
 	}
 }

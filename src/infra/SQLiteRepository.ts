@@ -35,4 +35,20 @@ export class SQLiteRepository {
 		const row = stmt.get(pluginUserId) as { discord_id: string } | undefined;
 		return row?.discord_id ?? null;
 	}
+
+	public getPlatformsStatusByUserId(pluginUserId: string): {
+		discord: boolean;
+		telegram: boolean;
+	} {
+		const stmt = this.db.prepare(`
+            SELECT discord_id FROM linked_users WHERE plugin_user_id = ?
+        `);
+
+		const row = stmt.get(pluginUserId) as { discord_id: string } | undefined;
+
+		return {
+			discord: !!row?.discord_id,
+			telegram: false,
+		};
+	}
 }
