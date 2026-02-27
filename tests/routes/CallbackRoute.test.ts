@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import WebSocket from "ws";
 import type { SQLiteRepository } from "../../src/infra/SQLiteRepository.js";
 import { CallbackController } from "../../src/routes/CallbackRoute.js";
+import { OAuthErrorHandler } from "../../src/routes/callbacks/OAuthErrorHandler.js";
+import { OAuthSuccessHandler } from "../../src/routes/callbacks/OAuthSuccessHandler.js";
 import type { DiscordIntegration } from "../../src/services/DiscordIntegration.js";
 import type { InMemorySocket } from "../../src/websocket/infra/InMemorySocketConnections.js";
 
@@ -11,7 +13,6 @@ describe("CallbackController", () => {
 	let mockInMemorySocket: InMemorySocket;
 	let mockSqliteRepository: SQLiteRepository;
 	let mockDiscordIntegration: DiscordIntegration;
-	let req: Partial<Request>;
 	let res: Partial<Response>;
 
 	beforeEach(() => {
@@ -34,46 +35,55 @@ describe("CallbackController", () => {
 			send: vi.fn().mockReturnThis(),
 		};
 
-		controller = new CallbackController(
+		const oauthSuccessHandler = new OAuthSuccessHandler(
 			mockInMemorySocket,
 			mockSqliteRepository,
 			mockDiscordIntegration,
 		);
+		const oauthErrorHandler = new OAuthErrorHandler(mockInMemorySocket);
+
+		controller = new CallbackController(oauthSuccessHandler, oauthErrorHandler);
 	});
 
-	it("returns 400 when code is missing", async () => {
-		req = { query: { state: "user1" } };
-		await controller.execute(req as Request, res as Response);
+	it("returns 400 when code and error are both missing", async () => {
+		const req = { query: { state: "user1" } } as unknown as Request;
+		await controller.execute(req, res as Response);
 		expect(res.status).toHaveBeenCalledWith(400);
 	});
 
 	it("returns 400 when state is missing", async () => {
-		req = { query: { code: "abc123" } };
-		await controller.execute(req as Request, res as Response);
+		const req = { query: { code: "abc123" } } as unknown as Request;
+		await controller.execute(req, res as Response);
 		expect(res.status).toHaveBeenCalledWith(400);
 	});
 
 	it("returns 400 when code has special characters", async () => {
-		req = { query: { code: "<script>alert(1)</script>", state: "user1" } };
-		await controller.execute(req as Request, res as Response);
+		const req = {
+			query: { code: "<script>alert(1)</script>", state: "user1" },
+		} as unknown as Request;
+		await controller.execute(req, res as Response);
 		expect(res.status).toHaveBeenCalledWith(400);
 	});
 
 	it("returns 400 when state has special characters", async () => {
-		req = { query: { code: "abc123", state: "user;DROP TABLE" } };
-		await controller.execute(req as Request, res as Response);
+		const req = {
+			query: { code: "abc123", state: "user;DROP TABLE" },
+		} as unknown as Request;
+		await controller.execute(req, res as Response);
 		expect(res.status).toHaveBeenCalledWith(400);
 	});
 
 	it("links user and sends DM on valid OAuth callback", async () => {
-		req = { query: { code: "validcode123", state: "user42" } };
+		const req = {
+			query: { code: "validcode123", state: "user42" },
+		} as unknown as Request;
 		vi.mocked(mockDiscordIntegration.exchangeOAuthCode).mockResolvedValue({
 			discordId: "discord789",
 			username: "testuser",
 		});
 		vi.mocked(mockInMemorySocket.getSocket).mockReturnValue(undefined);
 
-		await controller.execute(req as Request, res as Response);
+		await controller.execute(req, res as Response);
 
 		expect(mockDiscordIntegration.exchangeOAuthCode).toHaveBeenCalledWith(
 			"validcode123",
@@ -91,8 +101,10 @@ describe("CallbackController", () => {
 		});
 	});
 
-	it("sends WS event when socket is connected", async () => {
-		req = { query: { code: "validcode123", state: "user42" } };
+	it("sends WS authComplete event when socket is connected", async () => {
+		const req = {
+			query: { code: "validcode123", state: "user42" },
+		} as unknown as Request;
 		vi.mocked(mockDiscordIntegration.exchangeOAuthCode).mockResolvedValue({
 			discordId: "discord789",
 			username: "testuser",
@@ -106,7 +118,7 @@ describe("CallbackController", () => {
 			mockSocket as WebSocket,
 		);
 
-		await controller.execute(req as Request, res as Response);
+		await controller.execute(req, res as Response);
 
 		expect(mockSocket.send).toHaveBeenCalledWith(
 			JSON.stringify({
@@ -118,14 +130,83 @@ describe("CallbackController", () => {
 	});
 
 	it("returns 500 when OAuth exchange fails", async () => {
-		req = { query: { code: "validcode123", state: "user42" } };
+		const req = {
+			query: { code: "validcode123", state: "user42" },
+		} as unknown as Request;
 		vi.mocked(mockDiscordIntegration.exchangeOAuthCode).mockRejectedValue(
 			new Error("Token request failed"),
 		);
 
-		await controller.execute(req as Request, res as Response);
+		await controller.execute(req, res as Response);
 
 		expect(res.status).toHaveBeenCalledWith(500);
 		expect(res.json).toHaveBeenCalledWith({ error: "OAuth failed" });
+	});
+
+	it("handles OAuth error response from Discord", async () => {
+		const req = {
+			query: {
+				error: "access_denied",
+				error_description: "The user denied the request",
+				state: "user42",
+			},
+		} as unknown as Request;
+
+		vi.mocked(mockInMemorySocket.getSocket).mockReturnValue(undefined);
+
+		await controller.execute(req, res as Response);
+
+		expect(res.status).toHaveBeenCalledWith(400);
+		expect(res.json).toHaveBeenCalledWith({
+			error: "OAuth authorization failed",
+			details: "The user denied the request",
+		});
+	});
+
+	it("sends WS authError event when Discord returns an error and socket is connected", async () => {
+		const req = {
+			query: {
+				error: "access_denied",
+				state: "user42",
+			},
+		} as unknown as Request;
+
+		const mockSocket: Partial<WebSocket> = {
+			readyState: WebSocket.OPEN,
+			send: vi.fn(),
+		};
+		vi.mocked(mockInMemorySocket.getSocket).mockReturnValue(
+			mockSocket as WebSocket,
+		);
+
+		await controller.execute(req, res as Response);
+
+		expect(mockSocket.send).toHaveBeenCalledWith(
+			JSON.stringify({
+				type: "authError",
+				provider: "discord",
+				pluginUserId: "user42",
+				error: "access_denied",
+			}),
+		);
+	});
+
+	it("handles OAuth error without description", async () => {
+		const req = {
+			query: {
+				error: "access_denied",
+				state: "user42",
+			},
+		} as unknown as Request;
+
+		vi.mocked(mockInMemorySocket.getSocket).mockReturnValue(undefined);
+
+		await controller.execute(req, res as Response);
+
+		expect(res.status).toHaveBeenCalledWith(400);
+		expect(res.json).toHaveBeenCalledWith({
+			error: "OAuth authorization failed",
+			details: "access_denied",
+		});
 	});
 });

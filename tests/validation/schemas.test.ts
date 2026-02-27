@@ -155,15 +155,38 @@ describe("notifyBodySchema", () => {
 });
 
 describe("callbackQuerySchema", () => {
-	it("accepts valid callback query", () => {
+	it("accepts valid success callback query", () => {
 		const result = callbackQuerySchema.safeParse({
 			code: "abc123",
 			state: "user42",
 		});
 		expect(result.success).toBe(true);
+		if (result.success) {
+			expect("code" in result.data).toBe(true);
+		}
 	});
 
-	it("rejects missing code", () => {
+	it("accepts valid error callback query", () => {
+		const result = callbackQuerySchema.safeParse({
+			error: "access_denied",
+			error_description: "The user denied the request",
+			state: "user42",
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect("error" in result.data).toBe(true);
+		}
+	});
+
+	it("accepts error callback without description", () => {
+		const result = callbackQuerySchema.safeParse({
+			error: "access_denied",
+			state: "user42",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects missing both code and error", () => {
 		expect(callbackQuerySchema.safeParse({ state: "user42" }).success).toBe(
 			false,
 		);
@@ -179,6 +202,15 @@ describe("callbackQuerySchema", () => {
 		expect(
 			callbackQuerySchema.safeParse({
 				code: "<script>alert(1)</script>",
+				state: "user42",
+			}).success,
+		).toBe(false);
+	});
+
+	it("rejects invalid error format", () => {
+		expect(
+			callbackQuerySchema.safeParse({
+				error: "<script>alert(1)</script>",
 				state: "user42",
 			}).success,
 		).toBe(false);

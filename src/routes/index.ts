@@ -4,6 +4,8 @@ import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
 import type { DiscordIntegration } from "../services/DiscordIntegration.js";
 import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnections.js";
 import { CallbackController } from "./CallbackRoute.js";
+import { OAuthErrorHandler } from "./callbacks/OAuthErrorHandler.js";
+import { OAuthSuccessHandler } from "./callbacks/OAuthSuccessHandler.js";
 import { NotifyController } from "./NotifyRoute.js";
 import { PlatformsController } from "./PlatformsRoute.js";
 
@@ -25,10 +27,17 @@ export class Router {
 	) {}
 
 	public registerRoutes(app: Express) {
-		const callbackController = new CallbackController(
+		const oauthSuccessHandler = new OAuthSuccessHandler(
 			this.inMemorySocket,
 			this.sqliteRepository,
 			this.discordIntegration,
+		);
+
+		const oauthErrorHandler = new OAuthErrorHandler(this.inMemorySocket);
+
+		const callbackController = new CallbackController(
+			oauthSuccessHandler,
+			oauthErrorHandler,
 		);
 
 		const notifyController = new NotifyController(

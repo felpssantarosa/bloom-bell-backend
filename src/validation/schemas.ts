@@ -32,10 +32,33 @@ export const notifyBodySchema = z.object({
 	maxSize: z.number().int().min(1).max(99).optional(),
 });
 
-export const callbackQuerySchema = z.object({
+const oauthErrorSchema = sanitizedString.pipe(
+	z
+		.string()
+		.min(1)
+		.max(64)
+		.regex(/^[a-z_]+$/i, "Invalid OAuth error format"),
+);
+
+const oauthErrorDescriptionSchema = sanitizedString.pipe(
+	z.string().min(1).max(256),
+);
+
+export const oauthSuccessQuerySchema = z.object({
 	code: oauthCodeSchema,
 	state: pluginUserIdSchema,
 });
+
+export const oauthErrorQuerySchema = z.object({
+	error: oauthErrorSchema,
+	error_description: oauthErrorDescriptionSchema.optional(),
+	state: pluginUserIdSchema,
+});
+
+export const callbackQuerySchema = z.union([
+	oauthSuccessQuerySchema,
+	oauthErrorQuerySchema,
+]);
 
 export const platformsQuerySchema = z.object({
 	userId: pluginUserIdSchema,
