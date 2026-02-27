@@ -30,7 +30,7 @@ app.use(
 	cors({
 		origin: allowedOrigins.length > 0 ? allowedOrigins : false,
 		methods: ["GET", "POST"],
-		allowedHeaders: ["Content-Type", "Authorization", "X-API-Key"],
+		allowedHeaders: ["Content-Type", "Authorization"],
 	}),
 );
 app.use(rateLimiter);

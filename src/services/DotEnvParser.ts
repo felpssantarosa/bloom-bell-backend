@@ -10,7 +10,6 @@ const envSchema = z.object({
 	REDIRECT_URI: z.url("REDIRECT_URI must be a valid URL"),
 	PORT: z.string().regex(/^\d+$/, "PORT must be numeric").default("3333"),
 	WS_PORT: z.string().regex(/^\d+$/, "WS_PORT must be numeric").default("3334"),
-	API_KEY: z.string().min(16, "API_KEY must be at least 16 characters"),
 	ALLOWED_ORIGINS: z
 		.string()
 		.default("")
