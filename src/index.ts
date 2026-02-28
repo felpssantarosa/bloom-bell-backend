@@ -25,6 +25,7 @@ const allowedOrigins = dotenvConfig.ALLOWED_ORIGINS
 	? dotenvConfig.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
 	: [];
 
+app.set("trust proxy", true);
 app.use(helmet());
 app.use(
 	cors({
