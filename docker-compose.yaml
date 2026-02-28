@@ -1,6 +1,7 @@
 services:
   backend:
     container_name: bloom-bell-backend
+    user: "${UID}:${GID}"
     image: felipessdev/bloom-bell-backend:latest
     volumes:
       - bloom-bell-data:/app/data
