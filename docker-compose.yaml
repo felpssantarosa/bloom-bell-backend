@@ -2,6 +2,8 @@ services:
   backend:
     container_name: bloom-bell-backend
     image: felipessdev/bloom-bell-backend:latest
+    volumes:
+      - bloom-bell-data:/app/data
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,3 +13,6 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+
+volumes:
+  bloom-bell-data:
