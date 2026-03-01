@@ -1,4 +1,13 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import {
+	ApplicationIntegrationType,
+	type ChatInputCommandInteraction,
+	Client,
+	GatewayIntentBits,
+	InteractionContextType,
+	REST,
+	Routes,
+	SlashCommandBuilder,
+} from "discord.js";
 import { dotenvConfig } from "./DotEnvParser.js";
 
 export type SendDirectMessageParams = {
@@ -32,13 +41,58 @@ export class DiscordIntegration {
 	}
 
 	async initialize() {
-		await this.discordClient.login(process.env.DISCORD_BOT_TOKEN);
+		this.discordClient.on("interactionCreate", (interaction) => {
+			if (!interaction.isChatInputCommand()) return;
+			void this.handleCommand(interaction);
+		});
+
+		await this.discordClient.login(dotenvConfig.DISCORD_BOT_TOKEN);
 
 		if (!this.discordClient.user) {
 			throw new Error("Failed to log in to Discord");
 		}
 
 		console.log("Bot logged in as:", this.discordClient.user.tag);
+
+		await this.registerCommands();
+	}
+
+	private async registerCommands() {
+		const commands = [
+			new SlashCommandBuilder()
+				.setName("activate")
+				.setDescription(
+					"Set up your FFXIV plugin to receive Discord notifications",
+				)
+				.setIntegrationTypes(
+					ApplicationIntegrationType.GuildInstall,
+					ApplicationIntegrationType.UserInstall,
+				)
+				.setContexts(
+					InteractionContextType.Guild,
+					InteractionContextType.BotDM,
+					InteractionContextType.PrivateChannel,
+				)
+				.toJSON(),
+		];
+
+		const rest = new REST().setToken(dotenvConfig.DISCORD_BOT_TOKEN);
+
+		await rest.put(Routes.applicationCommands(dotenvConfig.DISCORD_CLIENT_ID), {
+			body: commands,
+		});
+
+		console.log("Slash commands registered successfully");
+	}
+
+	private async handleCommand(interaction: ChatInputCommandInteraction) {
+		if (interaction.commandName === "activate") {
+			await interaction.reply({
+				content:
+					"✅ You're all set! Open the **Bloom Bell** plugin in FFXIV and click \"Link Discord\" to complete the setup. Once linked, you'll receive notifications here.",
+				flags: ["Ephemeral"],
+			});
+		}
 	}
 
 	async sendDirectMessage({ userId, message }: SendDirectMessageParams) {
