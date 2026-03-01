@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import path from "path";
 import {
 	discordIntegration,
 	router,
@@ -36,6 +37,10 @@ app.use(
 );
 app.use(rateLimiter);
 app.use(express.json({ limit: "16kb" }));
+app.use(
+	"/static",
+	express.static(path.resolve(process.cwd(), "src", "public")),
+);
 app.disable("x-powered-by");
 
 websocketManager.start();
