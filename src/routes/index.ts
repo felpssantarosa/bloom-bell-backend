@@ -8,6 +8,8 @@ import { OAuthErrorHandler } from "./callbacks/OAuthErrorHandler.js";
 import { OAuthSuccessHandler } from "./callbacks/OAuthSuccessHandler.js";
 import { NotifyController } from "./NotifyRoute.js";
 import { PlatformsController } from "./PlatformsRoute.js";
+import { PrivacyController } from "./PrivacyRoute.js";
+import { TermsController } from "./TermsRoute.js";
 
 const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
 
@@ -47,10 +49,16 @@ export class Router {
 
 		const platformsController = new PlatformsController(this.sqliteRepository);
 
+		const termsController = new TermsController();
+
+		const privacyController = new PrivacyController();
+
 		app.get("/callback", (req, res) => callbackController.execute(req, res));
 		app.post("/notify", notifyRateLimiter, (req, res) =>
 			notifyController.execute(req, res),
 		);
 		app.get("/platforms", (req, res) => platformsController.execute(req, res));
+		app.get("/terms", (req, res) => termsController.execute(req, res));
+		app.get("/privacy", (req, res) => privacyController.execute(req, res));
 	}
 }
