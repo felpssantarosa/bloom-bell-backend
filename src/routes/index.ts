@@ -6,6 +6,7 @@ import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnection
 import { CallbackController } from "./CallbackRoute.js";
 import { OAuthErrorHandler } from "./callbacks/OAuthErrorHandler.js";
 import { OAuthSuccessHandler } from "./callbacks/OAuthSuccessHandler.js";
+import { DisconnectController } from "./DisconnectRoute.js";
 import { NotifyController } from "./NotifyRoute.js";
 import { PlatformsController } from "./PlatformsRoute.js";
 import { PrivacyController } from "./PrivacyRoute.js";
@@ -53,6 +54,10 @@ export class Router {
 
 		const privacyController = new PrivacyController();
 
+		const disconnectController = new DisconnectController(
+			this.sqliteRepository,
+		);
+
 		app.get("/callback", (req, res) => callbackController.execute(req, res));
 		app.post("/notify", notifyRateLimiter, (req, res) =>
 			notifyController.execute(req, res),
@@ -60,5 +65,8 @@ export class Router {
 		app.get("/platforms", (req, res) => platformsController.execute(req, res));
 		app.get("/terms", (req, res) => termsController.execute(req, res));
 		app.get("/privacy", (req, res) => privacyController.execute(req, res));
+		app.post("/disconnect", (req, res) =>
+			disconnectController.execute(req, res),
+		);
 	}
 }

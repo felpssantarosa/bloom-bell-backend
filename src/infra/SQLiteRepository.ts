@@ -51,4 +51,26 @@ export class SQLiteRepository {
 			telegram: false,
 		};
 	}
+
+	public unlinkUser(pluginUserId: string): boolean {
+		return this.unlinkPlatform(pluginUserId, "discord");
+	}
+
+	public unlinkPlatform(pluginUserId: string, platform: string): boolean {
+		switch (platform) {
+			case "discord": {
+				const stmt = this.db.prepare(`
+					DELETE FROM linked_users WHERE plugin_user_id = ?
+				`);
+
+				const info = stmt.run(pluginUserId);
+				return info.changes > 0;
+			}
+			default: {
+				console.warn(`Attempted to unlink unsupported platform: ${platform}`);
+
+				return false;
+			}
+		}
+	}
 }
