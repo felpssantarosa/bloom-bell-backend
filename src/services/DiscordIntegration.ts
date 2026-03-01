@@ -9,6 +9,7 @@ import {
 	SlashCommandBuilder,
 } from "discord.js";
 import { dotenvConfig } from "./DotEnvParser.js";
+import { Logger } from "./Logger.js";
 
 export type SendDirectMessageParams = {
 	userId: string;
@@ -33,6 +34,7 @@ interface DiscordUser {
 
 export class DiscordIntegration {
 	private discordClient: Client;
+	private readonly logger = new Logger("DiscordIntegration");
 
 	constructor() {
 		this.discordClient = new Client({
@@ -52,7 +54,8 @@ export class DiscordIntegration {
 			throw new Error("Failed to log in to Discord");
 		}
 
-		console.log("Bot logged in as:", this.discordClient.user.tag);
+		this.logger.info("Discord bot logged in");
+		this.logger.debug("Logged in as", this.discordClient.user.tag);
 
 		await this.registerCommands();
 	}
@@ -82,7 +85,7 @@ export class DiscordIntegration {
 			body: commands,
 		});
 
-		console.log("Slash commands registered successfully");
+		this.logger.info("Slash commands registered successfully");
 	}
 
 	private async handleCommand(interaction: ChatInputCommandInteraction) {
@@ -99,13 +102,13 @@ export class DiscordIntegration {
 		try {
 			const user = await this.discordClient.users.fetch(userId);
 
-			console.log(`Attempting to send DM to user ${userId}`);
+			this.logger.debug("Attempting to send DM to user", userId);
 
 			await user.send(message);
 
-			console.log("DM sent successfully");
+			this.logger.info("DM sent successfully");
 		} catch (err) {
-			console.error(`Failed to send DM to user: ${(err as Error).message}`);
+			this.logger.error("Failed to send DM to user", err);
 		}
 	}
 

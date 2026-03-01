@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import type { SQLiteRepository } from "../../infra/SQLiteRepository.js";
 import type { DiscordIntegration } from "../../services/DiscordIntegration.js";
+import { Logger } from "../../services/Logger.js";
 import type { InMemorySocket } from "../../websocket/infra/InMemorySocketConnections.js";
 
 type OAuthSuccessParams = {
@@ -9,6 +10,8 @@ type OAuthSuccessParams = {
 };
 
 export class OAuthSuccessHandler {
+	private readonly logger = new Logger("OAuthSuccessHandler");
+
 	constructor(
 		private readonly inMemorySocket: InMemorySocket,
 		private readonly sqliteRepository: SQLiteRepository,
@@ -25,7 +28,8 @@ export class OAuthSuccessHandler {
 
 			this.sqliteRepository.linkUser(pluginUserId, discordId);
 
-			console.log(`Linked plugin user ${pluginUserId} to Discord account`);
+			this.logger.info("OAuth flow completed, account linked");
+			this.logger.debug("Linked plugin user to Discord", { pluginUserId, discordId });
 
 			await this.discordIntegration.sendDirectMessage({
 				userId: discordId,
@@ -43,18 +47,20 @@ export class OAuthSuccessHandler {
 					}),
 				);
 
-				console.log(`Sent authComplete WS event to ${pluginUserId}`);
+				this.logger.info("Sent authComplete WS event to plugin user");
+				this.logger.debug("Plugin user ID", pluginUserId);
 			} else {
-				console.log(
-					`WS not active for ${pluginUserId}. Plugin will receive auth state on next register.`,
+				this.logger.info(
+					"WS not active for plugin user; auth state will sync on next register",
 				);
+				this.logger.debug("Plugin user ID", pluginUserId);
 			}
 
 			return res.json({
 				message: "Account linked! You can close this window.",
 			});
 		} catch (err) {
-			console.error("OAuth callback error occurred: ", err);
+			this.logger.error("OAuth callback error occurred", err);
 			return res.status(500).json({ error: "OAuth failed" });
 		}
 	}

@@ -1,14 +1,17 @@
+import path from "node:path";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import path from "path";
 import {
 	discordIntegration,
 	router,
 	websocketManager,
 } from "./DepedencyInjection.js";
 import { dotenvConfig } from "./services/DotEnvParser.js";
+import { Logger } from "./services/Logger.js";
+
+const logger = new Logger("App");
 
 const app = express();
 const APP_PORT = Number(dotenvConfig.PORT) || 3000;
@@ -51,8 +54,8 @@ async function main() {
 	await discordIntegration.initialize();
 
 	app.listen(APP_PORT, () => {
-		console.log(`HTTP backend running on port ${APP_PORT}`);
-		console.log(`WebSocket server running on port ${WS_PORT}`);
+		logger.info(`HTTP backend running on port ${APP_PORT}`);
+		logger.info(`WebSocket server running on port ${WS_PORT}`);
 	});
 }
 

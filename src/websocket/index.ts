@@ -1,5 +1,6 @@
 import type WebSocket from "ws";
 import { WebSocketServer } from "ws";
+import { Logger } from "../services/Logger.js";
 import type { RegisterUserController } from "./controllers/RegisterUserController.js";
 import { websocketMessageParser } from "./MessageParser.js";
 
@@ -10,6 +11,7 @@ const HEARTBEAT_INTERVAL_MS = 30_000;
 export class WebsocketManager {
 	private readonly webSocketServer: WebSocketServer;
 	private readonly Router;
+	private readonly logger = new Logger("WebsocketManager");
 	private activeConnections = 0;
 
 	constructor(
@@ -43,7 +45,9 @@ export class WebsocketManager {
 			"connection",
 			(websocketConnection: WebSocket, _request) => {
 				if (this.activeConnections >= MAX_WS_CONNECTIONS) {
-					console.warn("WebSocket connection limit reached, rejecting");
+					this.logger.warn(
+						"WebSocket connection limit reached, rejecting new connection",
+					);
 					websocketConnection.close(1013, "Server overloaded");
 					return;
 				}
@@ -57,7 +61,7 @@ export class WebsocketManager {
 						true;
 				});
 
-				console.log(
+				this.logger.info(
 					`WebSocket connection established (active: ${this.activeConnections})`,
 				);
 
@@ -72,7 +76,7 @@ export class WebsocketManager {
 				websocketConnection.on("message", (data: WebSocket.RawData) => {
 					messageCount++;
 					if (messageCount > MESSAGE_RATE_LIMIT) {
-						console.warn(
+						this.logger.warn(
 							"WebSocket message rate limit exceeded, closing connection",
 						);
 						websocketConnection.close(1008, "Rate limit exceeded");
@@ -82,7 +86,9 @@ export class WebsocketManager {
 					const message = websocketMessageParser(data);
 
 					if (!message) {
-						console.log("Received invalid message, ignoring.");
+						this.logger.warn(
+							"Received unparseable WebSocket message, ignoring",
+						);
 						return;
 					}
 
@@ -90,10 +96,8 @@ export class WebsocketManager {
 						this.Router[message.type as keyof typeof this.Router];
 
 					if (!controller) {
-						console.warn(
-							"No controller found for message type:",
-							String(message.type),
-						);
+						this.logger.warn("No controller found for WebSocket message type");
+						this.logger.debug("Unknown message type", String(message.type));
 						return;
 					}
 
@@ -106,7 +110,7 @@ export class WebsocketManager {
 				});
 
 				websocketConnection.on("error", (err: Error) => {
-					console.error("WebSocket error:", err.message);
+					this.logger.error("WebSocket connection error", err);
 				});
 			},
 		);

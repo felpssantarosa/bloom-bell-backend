@@ -1,5 +1,6 @@
 import type WebSocket from "ws";
 import { z } from "zod";
+import { Logger } from "../../services/Logger.js";
 import type { RegisterUserService } from "../services/RegisterUserService.js";
 
 const registerUserSchema = z.object({
@@ -8,13 +9,15 @@ const registerUserSchema = z.object({
 });
 
 export class RegisterUserController {
+	private readonly logger = new Logger("RegisterUserController");
+
 	constructor(private readonly registerUserService: RegisterUserService) {}
 
 	public execute(message: unknown, websocketConnection: WebSocket) {
 		const parsed = registerUserSchema.safeParse(message);
 
 		if (!parsed.success) {
-			console.error("Invalid register message format: ", parsed.error);
+			this.logger.error("Invalid register message format", parsed.error);
 			return;
 		}
 
