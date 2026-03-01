@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SQLiteRepository } from "../../src/infra/SQLiteRepository.js";
-import { NotifyController } from "../../src/routes/NotifyRoute.js";
+import { NotifyController } from "../../src/routes/controllers/NotifyController.js";
+import { NotifyService } from "../../src/routes/services/NotifyService.js";
 import type { DiscordIntegration } from "../../src/services/DiscordIntegration.js";
 
 describe("NotifyController", () => {
@@ -26,8 +27,7 @@ describe("NotifyController", () => {
 		};
 
 		controller = new NotifyController(
-			mockSqliteRepository,
-			mockDiscordIntegration,
+			new NotifyService(mockSqliteRepository, mockDiscordIntegration),
 		);
 	});
 

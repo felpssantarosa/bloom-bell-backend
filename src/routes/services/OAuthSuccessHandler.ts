@@ -29,7 +29,10 @@ export class OAuthSuccessHandler {
 			this.sqliteRepository.linkUser(pluginUserId, discordId);
 
 			this.logger.info("OAuth flow completed, account linked");
-			this.logger.debug("Linked plugin user to Discord", { pluginUserId, discordId });
+			this.logger.debug("Linked plugin user to Discord", {
+				pluginUserId,
+				discordId,
+			});
 
 			await this.discordIntegration.sendDirectMessage({
 				userId: discordId,

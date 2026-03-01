@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { callbackQuerySchema } from "../validation/schemas.js";
-import type { OAuthErrorHandler } from "./callbacks/OAuthErrorHandler.js";
-import type { OAuthSuccessHandler } from "./callbacks/OAuthSuccessHandler.js";
+import { callbackQuerySchema } from "../../validation/schemas.js";
+import type { OAuthErrorHandler } from "../services/OAuthErrorHandler.js";
+import type { OAuthSuccessHandler } from "../services/OAuthSuccessHandler.js";
 
 export class CallbackController {
 	constructor(

@@ -3,14 +3,17 @@ import rateLimit from "express-rate-limit";
 import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
 import type { DiscordIntegration } from "../services/DiscordIntegration.js";
 import type { InMemorySocket } from "../websocket/infra/InMemorySocketConnections.js";
-import { CallbackController } from "./CallbackRoute.js";
-import { OAuthErrorHandler } from "./callbacks/OAuthErrorHandler.js";
-import { OAuthSuccessHandler } from "./callbacks/OAuthSuccessHandler.js";
-import { DisconnectController } from "./DisconnectRoute.js";
-import { NotifyController } from "./NotifyRoute.js";
-import { PlatformsController } from "./PlatformsRoute.js";
-import { PrivacyController } from "./PrivacyRoute.js";
-import { TermsController } from "./TermsRoute.js";
+import { CallbackController } from "./controllers/CallbackController.js";
+import { DisconnectController } from "./controllers/DisconnectController.js";
+import { NotifyController } from "./controllers/NotifyController.js";
+import { PlatformsController } from "./controllers/PlatformsController.js";
+import { PrivacyController } from "./controllers/PrivacyController.js";
+import { TermsController } from "./controllers/TermsController.js";
+import { DisconnectService } from "./services/DisconnectService.js";
+import { NotifyService } from "./services/NotifyService.js";
+import { OAuthErrorHandler } from "./services/OAuthErrorHandler.js";
+import { OAuthSuccessHandler } from "./services/OAuthSuccessHandler.js";
+import { PlatformsService } from "./services/PlatformsService.js";
 
 const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
 
@@ -43,20 +46,21 @@ export class Router {
 			oauthErrorHandler,
 		);
 
-		const notifyController = new NotifyController(
+		const notifyService = new NotifyService(
 			this.sqliteRepository,
 			this.discordIntegration,
 		);
+		const notifyController = new NotifyController(notifyService);
 
-		const platformsController = new PlatformsController(this.sqliteRepository);
+		const platformsService = new PlatformsService(this.sqliteRepository);
+		const platformsController = new PlatformsController(platformsService);
+
+		const disconnectService = new DisconnectService(this.sqliteRepository);
+		const disconnectController = new DisconnectController(disconnectService);
 
 		const termsController = new TermsController();
 
 		const privacyController = new PrivacyController();
-
-		const disconnectController = new DisconnectController(
-			this.sqliteRepository,
-		);
 
 		app.get("/callback", (req, res) => callbackController.execute(req, res));
 		app.post("/notify", notifyRateLimiter, (req, res) =>

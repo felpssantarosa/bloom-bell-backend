@@ -241,4 +241,52 @@ describe("HTTP Integration Tests", () => {
 			expect(res.status).toBe(413);
 		});
 	});
+
+	describe("POST /disconnect", () => {
+		it("returns 400 for missing body", async () => {
+			const res = await fetch(`${baseUrl}/disconnect`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({}),
+			});
+			expect(res.status).toBe(400);
+		});
+
+		it("returns 404 when user is not linked", async () => {
+			const res = await fetch(`${baseUrl}/disconnect`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ pluginUserId: "ghost-user" }),
+			});
+			expect(res.status).toBe(404);
+		});
+
+		it("disconnects a linked user", async () => {
+			repo.linkUser("disconnect-user", "discord-456");
+
+			const res = await fetch(`${baseUrl}/disconnect`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ pluginUserId: "disconnect-user" }),
+			});
+			expect(res.status).toBe(200);
+
+			const body = await res.json();
+			expect(body).toEqual({ status: "Disconnected", platform: "discord" });
+			expect(repo.getDiscordIdByPluginUserId("disconnect-user")).toBeNull();
+		});
+	});
+	describe("GET /privacy", () => {
+		it("returns 200 with privacy html", async () => {
+			const res = await fetch(`${baseUrl}/privacy`);
+			expect(res.status).toBe(200);
+		});
+	});
+
+	describe("GET /terms", () => {
+		it("returns 200 with terms html", async () => {
+			const res = await fetch(`${baseUrl}/terms`);
+			expect(res.status).toBe(200);
+		});
+	});
 });

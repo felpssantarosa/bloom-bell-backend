@@ -1,9 +1,11 @@
 import path from "node:path";
 import Database from "better-sqlite3";
+import { Logger } from "../services/Logger.js";
 
 export class SQLiteRepository {
 	private filePath: string;
 	private db: Database.Database;
+	private readonly logger = new Logger("SQLiteRepository");
 
 	constructor(dbPath?: string) {
 		this.filePath = dbPath ?? path.resolve("data/database.sqlite");
@@ -67,7 +69,9 @@ export class SQLiteRepository {
 				return info.changes > 0;
 			}
 			default: {
-				console.warn(`Attempted to unlink unsupported platform: ${platform}`);
+				this.logger.warn(
+					`Attempted to unlink unsupported platform: ${platform}`,
+				);
 
 				return false;
 			}
