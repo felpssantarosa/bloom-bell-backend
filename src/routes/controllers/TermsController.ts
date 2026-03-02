@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Request, Response } from "express";
 import { Logger } from "../../services/Logger.js";
 
@@ -6,6 +7,8 @@ export class TermsController {
 	private readonly logger = new Logger("TermsController");
 
 	public execute(_req: Request, res: Response) {
+		const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 		const filePath = path.resolve(
 			__dirname,
 			"..",

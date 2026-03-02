@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -12,6 +13,7 @@ import { dotenvConfig } from "./services/DotEnvParser.js";
 import { Logger } from "./services/Logger.js";
 
 const logger = new Logger("App");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const APP_PORT = Number(dotenvConfig.PORT) || 3000;
@@ -40,10 +42,7 @@ app.use(
 );
 app.use(rateLimiter);
 app.use(express.json({ limit: "16kb" }));
-app.use(
-	"/static",
-	express.static(path.resolve(__dirname, "public")),
-);
+app.use("/static", express.static(path.resolve(__dirname, "public")));
 app.disable("x-powered-by");
 
 websocketManager.start();
