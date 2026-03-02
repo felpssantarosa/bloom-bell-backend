@@ -3,14 +3,9 @@ import { z } from "zod";
 import { pluginUserIdSchema } from "../../validation/schemas.js";
 import type { DisconnectService } from "../services/DisconnectService.js";
 
-const platformSchema = z
-	.string()
-	.min(1)
-	.max(32)
-	.regex(
-		/^[a-zA-Z0-9_-]+$/,
-		"platform must be a short alphanumeric identifier",
-	);
+const SUPPORTED_PLATFORMS = ["discord"] as const;
+
+const platformSchema = z.enum(SUPPORTED_PLATFORMS);
 
 const bodySchema = z.object({
 	pluginUserId: pluginUserIdSchema,

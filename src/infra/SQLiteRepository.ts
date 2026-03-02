@@ -2,6 +2,8 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { Logger } from "../services/Logger.js";
 
+export type UnlinkResult = "unlinked" | "not_found" | "unsupported_platform";
+
 export class SQLiteRepository {
 	private filePath: string;
 	private db: Database.Database;
@@ -55,10 +57,10 @@ export class SQLiteRepository {
 	}
 
 	public unlinkUser(pluginUserId: string): boolean {
-		return this.unlinkPlatform(pluginUserId, "discord");
+		return this.unlinkPlatform(pluginUserId, "discord") === "unlinked";
 	}
 
-	public unlinkPlatform(pluginUserId: string, platform: string): boolean {
+	public unlinkPlatform(pluginUserId: string, platform: string): UnlinkResult {
 		switch (platform) {
 			case "discord": {
 				const stmt = this.db.prepare(`
@@ -66,14 +68,14 @@ export class SQLiteRepository {
 				`);
 
 				const info = stmt.run(pluginUserId);
-				return info.changes > 0;
+				return info.changes > 0 ? "unlinked" : "not_found";
 			}
 			default: {
 				this.logger.warn(
 					`Attempted to unlink unsupported platform: ${platform}`,
 				);
 
-				return false;
+				return "unsupported_platform";
 			}
 		}
 	}

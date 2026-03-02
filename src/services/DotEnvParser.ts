@@ -4,7 +4,9 @@ import { z } from "zod";
 dotenv.config();
 
 const envSchema = z.object({
-	NODE_ENV: z.enum(["production", "development", "test"]).default("development"),
+	NODE_ENV: z
+		.enum(["production", "development", "test"])
+		.default("development"),
 	DISCORD_CLIENT_ID: z.string().min(1, "DISCORD_CLIENT_ID is required"),
 	DISCORD_CLIENT_SECRET: z.string().min(1, "DISCORD_CLIENT_SECRET is required"),
 	DISCORD_BOT_TOKEN: z.string().min(1, "DISCORD_BOT_TOKEN is required"),
@@ -15,6 +17,15 @@ const envSchema = z.object({
 		.string()
 		.default("")
 		.describe("Comma-separated list of allowed CORS origins"),
+	/**
+	 * Set to "true" in deploy/CI workflows to register Discord slash commands.
+	 * Intentionally off by default — registration is slow, rate-limited, and
+	 * a transient API failure should not prevent the service from starting.
+	 */
+	REGISTER_COMMANDS: z
+		.string()
+		.default("false")
+		.transform((v) => v === "true"),
 });
 
 const parsed = envSchema.safeParse(process.env);

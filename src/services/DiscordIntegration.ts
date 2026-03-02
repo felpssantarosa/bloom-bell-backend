@@ -57,7 +57,17 @@ export class DiscordIntegration {
 		this.logger.info("Discord bot logged in");
 		this.logger.debug("Logged in as", this.discordClient.user.tag);
 
-		await this.registerCommands();
+		if (dotenvConfig.REGISTER_COMMANDS) {
+			try {
+				await this.registerCommands();
+			} catch (err) {
+				this.logger.error("Failed to register slash commands", err);
+			}
+		} else {
+			this.logger.debug(
+				"Skipping command registration (REGISTER_COMMANDS is not set)",
+			);
+		}
 	}
 
 	private async registerCommands() {

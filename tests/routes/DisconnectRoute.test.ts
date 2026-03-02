@@ -43,9 +43,15 @@ describe("DisconnectController + DisconnectService", () => {
 		expect(res.status).toHaveBeenCalledWith(400);
 	});
 
+	it("returns 400 when platform is not supported", () => {
+		req = { body: { pluginUserId: "user1", platform: "telegram" } };
+		controller.execute(req as Request, res as Response);
+		expect(res.status).toHaveBeenCalledWith(400);
+	});
+
 	it("returns 404 when platform link is not found", () => {
 		req = { body: { pluginUserId: "user1" } };
-		vi.mocked(mockSqliteRepository.unlinkPlatform).mockReturnValue(false);
+		vi.mocked(mockSqliteRepository.unlinkPlatform).mockReturnValue("not_found");
 		controller.execute(req as Request, res as Response);
 		expect(res.status).toHaveBeenCalledWith(404);
 		expect(res.json).toHaveBeenCalledWith({
@@ -53,9 +59,21 @@ describe("DisconnectController + DisconnectService", () => {
 		});
 	});
 
+	it("returns 400 when repository reports unsupported platform", () => {
+		req = { body: { pluginUserId: "user1" } };
+		vi.mocked(mockSqliteRepository.unlinkPlatform).mockReturnValue(
+			"unsupported_platform",
+		);
+		controller.execute(req as Request, res as Response);
+		expect(res.status).toHaveBeenCalledWith(400);
+		expect(res.json).toHaveBeenCalledWith({
+			error: 'Platform "discord" is not supported',
+		});
+	});
+
 	it("returns success and defaults platform to discord", () => {
 		req = { body: { pluginUserId: "user1" } };
-		vi.mocked(mockSqliteRepository.unlinkPlatform).mockReturnValue(true);
+		vi.mocked(mockSqliteRepository.unlinkPlatform).mockReturnValue("unlinked");
 		controller.execute(req as Request, res as Response);
 		expect(mockSqliteRepository.unlinkPlatform).toHaveBeenCalledWith(
 			"user1",
@@ -68,16 +86,16 @@ describe("DisconnectController + DisconnectService", () => {
 	});
 
 	it("uses the specified platform instead of the default", () => {
-		req = { body: { pluginUserId: "user1", platform: "telegram" } };
-		vi.mocked(mockSqliteRepository.unlinkPlatform).mockReturnValue(true);
+		req = { body: { pluginUserId: "user1", platform: "discord" } };
+		vi.mocked(mockSqliteRepository.unlinkPlatform).mockReturnValue("unlinked");
 		controller.execute(req as Request, res as Response);
 		expect(mockSqliteRepository.unlinkPlatform).toHaveBeenCalledWith(
 			"user1",
-			"telegram",
+			"discord",
 		);
 		expect(res.json).toHaveBeenCalledWith({
 			status: "Disconnected",
-			platform: "telegram",
+			platform: "discord",
 		});
 	});
 

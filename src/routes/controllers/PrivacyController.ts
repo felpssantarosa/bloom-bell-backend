@@ -7,8 +7,9 @@ export class PrivacyController {
 
 	public execute(_req: Request, res: Response) {
 		const filePath = path.resolve(
-			process.cwd(),
-			"src",
+			__dirname,
+			"..",
+			"..",
 			"public",
 			"privacy.html",
 		);

@@ -98,16 +98,21 @@ describe("SQLiteRepository", () => {
 	});
 
 	describe("unlinkPlatform", () => {
-		it("unlinks discord platform and returns true", () => {
+		it("returns 'unlinked' when discord link exists", () => {
 			repo.linkUser("user-p", "discord-p");
 			const result = repo.unlinkPlatform("user-p", "discord");
-			expect(result).toBe(true);
+			expect(result).toBe("unlinked");
 			expect(repo.getDiscordIdByPluginUserId("user-p")).toBeNull();
 		});
 
-		it("returns false for unsupported platform", () => {
+		it("returns 'not_found' when no discord link exists", () => {
+			const result = repo.unlinkPlatform("user-p", "discord");
+			expect(result).toBe("not_found");
+		});
+
+		it("returns 'unsupported_platform' for unknown platform", () => {
 			const result = repo.unlinkPlatform("user-p", "telegram");
-			expect(result).toBe(false);
+			expect(result).toBe("unsupported_platform");
 		});
 	});
 });

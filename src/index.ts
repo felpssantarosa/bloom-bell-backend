@@ -42,7 +42,7 @@ app.use(rateLimiter);
 app.use(express.json({ limit: "16kb" }));
 app.use(
 	"/static",
-	express.static(path.resolve(process.cwd(), "src", "public")),
+	express.static(path.resolve(__dirname, "public")),
 );
 app.disable("x-powered-by");
 

@@ -1,5 +1,8 @@
 import type { Response } from "express";
-import type { SQLiteRepository } from "../../infra/SQLiteRepository.js";
+import type {
+	SQLiteRepository,
+	UnlinkResult,
+} from "../../infra/SQLiteRepository.js";
 import { Logger } from "../../services/Logger.js";
 
 type DisconnectParams = {
@@ -16,12 +19,18 @@ export class DisconnectService {
 		const targetPlatform = platform ?? "discord";
 
 		try {
-			const removed = this.sqliteRepository.unlinkPlatform(
+			const result: UnlinkResult = this.sqliteRepository.unlinkPlatform(
 				pluginUserId,
 				targetPlatform,
 			);
 
-			if (!removed) {
+			if (result === "unsupported_platform") {
+				return res
+					.status(400)
+					.json({ error: `Platform "${targetPlatform}" is not supported` });
+			}
+
+			if (result === "not_found") {
 				return res
 					.status(404)
 					.json({ error: "No linked record found for given platform" });

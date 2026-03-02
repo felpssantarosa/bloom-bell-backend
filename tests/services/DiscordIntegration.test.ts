@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DiscordIntegration } from "../../src/services/DiscordIntegration.js";
+import { dotenvConfig } from "../../src/services/DotEnvParser.js";
 
 const mockLogin = vi.fn();
 const mockOn = vi.fn();
@@ -37,8 +38,11 @@ vi.mock("../../src/services/DotEnvParser.js", () => ({
 		PORT: "3333",
 		WS_PORT: "3334",
 		ALLOWED_ORIGINS: "",
+		REGISTER_COMMANDS: true,
 	},
 }));
+
+const mutableConfig = dotenvConfig as Record<string, unknown>;
 
 describe("DiscordIntegration", () => {
 	let discord: DiscordIntegration;
@@ -46,6 +50,8 @@ describe("DiscordIntegration", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockUser = null;
+		mutableConfig.REGISTER_COMMANDS = true;
+		mockPut.mockResolvedValue(undefined);
 		discord = new DiscordIntegration();
 	});
 
@@ -67,6 +73,25 @@ describe("DiscordIntegration", () => {
 			await expect(discord.initialize()).rejects.toThrow(
 				"Failed to log in to Discord",
 			);
+		});
+
+		it("skips command registration when REGISTER_COMMANDS is false", async () => {
+			mutableConfig.REGISTER_COMMANDS = false;
+			mockLogin.mockResolvedValue(undefined);
+			mockUser = { tag: "TestBot#1234" };
+
+			await discord.initialize();
+
+			expect(mockPut).not.toHaveBeenCalled();
+		});
+
+		it("logs error and does not throw when command registration fails", async () => {
+			mockLogin.mockResolvedValue(undefined);
+			mockUser = { tag: "TestBot#1234" };
+			mockPut.mockRejectedValue(new Error("Discord API error"));
+
+			await expect(discord.initialize()).resolves.toBeUndefined();
+			expect(mockPut).toHaveBeenCalled();
 		});
 
 		it("replies to activate command", async () => {
