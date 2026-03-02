@@ -2,9 +2,9 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import WebSocket from "ws";
 import type { SQLiteRepository } from "../../src/infra/SQLiteRepository.js";
-import { CallbackController } from "../../src/routes/CallbackRoute.js";
-import { OAuthErrorHandler } from "../../src/routes/callbacks/OAuthErrorHandler.js";
-import { OAuthSuccessHandler } from "../../src/routes/callbacks/OAuthSuccessHandler.js";
+import { CallbackController } from "../../src/routes/controllers/CallbackController.js";
+import { OAuthErrorHandler } from "../../src/routes/services/OAuthErrorHandler.js";
+import { OAuthSuccessHandler } from "../../src/routes/services/OAuthSuccessHandler.js";
 import type { DiscordIntegration } from "../../src/services/DiscordIntegration.js";
 import type { InMemorySocket } from "../../src/websocket/infra/InMemorySocketConnections.js";
 

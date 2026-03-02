@@ -1,26 +1,26 @@
-import type { Request, Response } from "express";
-import type { SQLiteRepository } from "../infra/SQLiteRepository.js";
-import type { DiscordIntegration } from "../services/DiscordIntegration.js";
-import { notifyBodySchema } from "../validation/schemas.js";
+import type { Response } from "express";
+import type { SQLiteRepository } from "../../infra/SQLiteRepository.js";
+import type { DiscordIntegration } from "../../services/DiscordIntegration.js";
+import { Logger } from "../../services/Logger.js";
 
-export class NotifyController {
+type NotifyParams = {
+	pluginUserId: string;
+	partySize?: number | undefined;
+	maxSize?: number | undefined;
+};
+
+export class NotifyService {
+	private readonly logger = new Logger("NotifyService");
+
 	constructor(
 		private readonly sqliteRepository: SQLiteRepository,
 		private readonly discordIntegration: DiscordIntegration,
 	) {}
 
-	public async execute(req: Request, res: Response) {
-		const parsed = notifyBodySchema.safeParse(req.body);
-
-		if (!parsed.success) {
-			return res.status(400).json({
-				error: "Invalid request body",
-				details: parsed.error.issues.map((i) => i.message),
-			});
-		}
-
-		const { pluginUserId, partySize, maxSize } = parsed.data;
-
+	public async execute(
+		{ pluginUserId, partySize, maxSize }: NotifyParams,
+		res: Response,
+	) {
 		try {
 			const discordIdFound =
 				this.sqliteRepository.getDiscordIdByPluginUserId(pluginUserId);
@@ -42,11 +42,12 @@ export class NotifyController {
 				message: "🎉 Your party is full! Time to queue!",
 			});
 
-			console.log(`Sent party notification for user ${pluginUserId}`);
+			this.logger.info("Party notification sent");
+			this.logger.debug("Sent party notification for user", pluginUserId);
 
 			return res.json({ status: "Notification sent" });
 		} catch (err) {
-			console.error("Notify error occurred: ", err);
+			this.logger.error("Notify error occurred", err);
 			return res.status(500).json({ error: "Internal server error" });
 		}
 	}

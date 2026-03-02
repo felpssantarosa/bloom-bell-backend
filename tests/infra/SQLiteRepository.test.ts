@@ -82,4 +82,32 @@ describe("SQLiteRepository", () => {
 			}
 		});
 	});
+
+	describe("unlinkUser", () => {
+		it("removes the discord link and returns true", () => {
+			repo.linkUser("user-unlink", "discord-del");
+			const result = repo.unlinkUser("user-unlink");
+			expect(result).toBe(true);
+			expect(repo.getDiscordIdByPluginUserId("user-unlink")).toBeNull();
+		});
+
+		it("returns false when user was not linked", () => {
+			const result = repo.unlinkUser("never-linked");
+			expect(result).toBe(false);
+		});
+	});
+
+	describe("unlinkPlatform", () => {
+		it("unlinks discord platform and returns true", () => {
+			repo.linkUser("user-p", "discord-p");
+			const result = repo.unlinkPlatform("user-p", "discord");
+			expect(result).toBe(true);
+			expect(repo.getDiscordIdByPluginUserId("user-p")).toBeNull();
+		});
+
+		it("returns false for unsupported platform", () => {
+			const result = repo.unlinkPlatform("user-p", "telegram");
+			expect(result).toBe(false);
+		});
+	});
 });

@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SQLiteRepository } from "../../src/infra/SQLiteRepository.js";
-import { PlatformsController } from "../../src/routes/PlatformsRoute.js";
+import { PlatformsController } from "../../src/routes/controllers/PlatformsController.js";
+import { PlatformsService } from "../../src/routes/services/PlatformsService.js";
 
 describe("PlatformsController", () => {
 	let controller: PlatformsController;
@@ -19,7 +20,9 @@ describe("PlatformsController", () => {
 			json: vi.fn().mockReturnThis(),
 		};
 
-		controller = new PlatformsController(mockSqliteRepository);
+		controller = new PlatformsController(
+			new PlatformsService(mockSqliteRepository),
+		);
 	});
 
 	it("returns 400 when userId is missing", async () => {

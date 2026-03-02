@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DiscordIntegration } from "../../src/services/DiscordIntegration.js";
 
 const mockLogin = vi.fn();
+const mockOn = vi.fn();
+const mockPut = vi.fn().mockResolvedValue(undefined);
 const mockUsersFetch = vi.fn();
 let mockUser: { tag: string } | null = null;
 
@@ -10,11 +12,18 @@ vi.mock("discord.js", async (importOriginal) => {
 	return {
 		...original,
 		Client: class MockClient {
+			on = mockOn;
 			login = mockLogin;
 			users = { fetch: mockUsersFetch };
 			get user() {
 				return mockUser;
 			}
+		},
+		REST: class MockREST {
+			setToken() {
+				return this;
+			}
+			put = mockPut;
 		},
 	};
 });
@@ -47,7 +56,8 @@ describe("DiscordIntegration", () => {
 
 			await discord.initialize();
 
-			expect(mockLogin).toHaveBeenCalledWith(process.env.DISCORD_BOT_TOKEN);
+			expect(mockLogin).toHaveBeenCalledWith("test-bot-token");
+			expect(mockPut).toHaveBeenCalled();
 		});
 
 		it("throws when login fails (no user)", async () => {
@@ -57,6 +67,61 @@ describe("DiscordIntegration", () => {
 			await expect(discord.initialize()).rejects.toThrow(
 				"Failed to log in to Discord",
 			);
+		});
+
+		it("replies to activate command", async () => {
+			mockLogin.mockResolvedValue(undefined);
+			mockUser = { tag: "TestBot#1234" };
+			await discord.initialize();
+
+			const mockReply = vi.fn().mockResolvedValue(undefined);
+			const interaction = {
+				isChatInputCommand: () => true,
+				commandName: "activate",
+				reply: mockReply,
+			};
+
+			const registeredCallback = mockOn.mock.calls[0][1] as (
+				i: typeof interaction,
+			) => void;
+			registeredCallback(interaction);
+
+			await Promise.resolve();
+			await Promise.resolve();
+			expect(mockReply).toHaveBeenCalledWith(
+				expect.objectContaining({ flags: ["Ephemeral"] }),
+			);
+		});
+
+		it("ignores non-chat-input interactions", async () => {
+			mockLogin.mockResolvedValue(undefined);
+			mockUser = { tag: "TestBot#1234" };
+			await discord.initialize();
+
+			const interaction = { isChatInputCommand: () => false };
+			const registeredCallback = mockOn.mock.calls[0][1] as (
+				i: typeof interaction,
+			) => void;
+			expect(() => registeredCallback(interaction)).not.toThrow();
+		});
+
+		it("does nothing for unknown command names", async () => {
+			mockLogin.mockResolvedValue(undefined);
+			mockUser = { tag: "TestBot#1234" };
+			await discord.initialize();
+
+			const interaction = {
+				isChatInputCommand: () => true,
+				commandName: "unknown",
+				reply: vi.fn(),
+			};
+			const registeredCallback = mockOn.mock.calls[0][1] as (
+				i: typeof interaction,
+			) => void;
+			registeredCallback(interaction);
+			await Promise.resolve();
+			await Promise.resolve();
+			expect(interaction.reply).not.toHaveBeenCalled();
 		});
 	});
 

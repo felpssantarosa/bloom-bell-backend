@@ -1,5 +1,15 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import {
+	ApplicationIntegrationType,
+	type ChatInputCommandInteraction,
+	Client,
+	GatewayIntentBits,
+	InteractionContextType,
+	REST,
+	Routes,
+	SlashCommandBuilder,
+} from "discord.js";
 import { dotenvConfig } from "./DotEnvParser.js";
+import { Logger } from "./Logger.js";
 
 export type SendDirectMessageParams = {
 	userId: string;
@@ -24,6 +34,7 @@ interface DiscordUser {
 
 export class DiscordIntegration {
 	private discordClient: Client;
+	private readonly logger = new Logger("DiscordIntegration");
 
 	constructor() {
 		this.discordClient = new Client({
@@ -32,26 +43,72 @@ export class DiscordIntegration {
 	}
 
 	async initialize() {
-		await this.discordClient.login(process.env.DISCORD_BOT_TOKEN);
+		this.discordClient.on("interactionCreate", (interaction) => {
+			if (!interaction.isChatInputCommand()) return;
+			void this.handleCommand(interaction);
+		});
+
+		await this.discordClient.login(dotenvConfig.DISCORD_BOT_TOKEN);
 
 		if (!this.discordClient.user) {
 			throw new Error("Failed to log in to Discord");
 		}
 
-		console.log("Bot logged in as:", this.discordClient.user.tag);
+		this.logger.info("Discord bot logged in");
+		this.logger.debug("Logged in as", this.discordClient.user.tag);
+
+		await this.registerCommands();
+	}
+
+	private async registerCommands() {
+		const commands = [
+			new SlashCommandBuilder()
+				.setName("activate")
+				.setDescription(
+					"Set up your FFXIV plugin to receive Discord notifications",
+				)
+				.setIntegrationTypes(
+					ApplicationIntegrationType.GuildInstall,
+					ApplicationIntegrationType.UserInstall,
+				)
+				.setContexts(
+					InteractionContextType.Guild,
+					InteractionContextType.BotDM,
+					InteractionContextType.PrivateChannel,
+				)
+				.toJSON(),
+		];
+
+		const rest = new REST().setToken(dotenvConfig.DISCORD_BOT_TOKEN);
+
+		await rest.put(Routes.applicationCommands(dotenvConfig.DISCORD_CLIENT_ID), {
+			body: commands,
+		});
+
+		this.logger.info("Slash commands registered successfully");
+	}
+
+	private async handleCommand(interaction: ChatInputCommandInteraction) {
+		if (interaction.commandName === "activate") {
+			await interaction.reply({
+				content:
+					"✅ You're all set! Open the **Bloom Bell** plugin in FFXIV and click \"Link Discord\" to complete the setup. Once linked, you'll receive notifications here.",
+				flags: ["Ephemeral"],
+			});
+		}
 	}
 
 	async sendDirectMessage({ userId, message }: SendDirectMessageParams) {
 		try {
 			const user = await this.discordClient.users.fetch(userId);
 
-			console.log(`Attempting to send DM to user ${userId}`);
+			this.logger.debug("Attempting to send DM to user", userId);
 
 			await user.send(message);
 
-			console.log("DM sent successfully");
+			this.logger.info("DM sent successfully");
 		} catch (err) {
-			console.error(`Failed to send DM to user: ${(err as Error).message}`);
+			this.logger.error("Failed to send DM to user", err);
 		}
 	}
 

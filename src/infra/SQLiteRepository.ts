@@ -1,9 +1,11 @@
 import path from "node:path";
 import Database from "better-sqlite3";
+import { Logger } from "../services/Logger.js";
 
 export class SQLiteRepository {
 	private filePath: string;
 	private db: Database.Database;
+	private readonly logger = new Logger("SQLiteRepository");
 
 	constructor(dbPath?: string) {
 		this.filePath = dbPath ?? path.resolve("data/database.sqlite");
@@ -50,5 +52,29 @@ export class SQLiteRepository {
 			discord: !!row?.discord_id,
 			telegram: false,
 		};
+	}
+
+	public unlinkUser(pluginUserId: string): boolean {
+		return this.unlinkPlatform(pluginUserId, "discord");
+	}
+
+	public unlinkPlatform(pluginUserId: string, platform: string): boolean {
+		switch (platform) {
+			case "discord": {
+				const stmt = this.db.prepare(`
+					DELETE FROM linked_users WHERE plugin_user_id = ?
+				`);
+
+				const info = stmt.run(pluginUserId);
+				return info.changes > 0;
+			}
+			default: {
+				this.logger.warn(
+					`Attempted to unlink unsupported platform: ${platform}`,
+				);
+
+				return false;
+			}
+		}
 	}
 }

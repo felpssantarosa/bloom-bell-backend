@@ -1,3 +1,4 @@
+import path from "node:path";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -8,6 +9,9 @@ import {
 	websocketManager,
 } from "./DepedencyInjection.js";
 import { dotenvConfig } from "./services/DotEnvParser.js";
+import { Logger } from "./services/Logger.js";
+
+const logger = new Logger("App");
 
 const app = express();
 const APP_PORT = Number(dotenvConfig.PORT) || 3000;
@@ -25,7 +29,7 @@ const allowedOrigins = dotenvConfig.ALLOWED_ORIGINS
 	? dotenvConfig.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
 	: [];
 
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
 	cors({
@@ -36,6 +40,10 @@ app.use(
 );
 app.use(rateLimiter);
 app.use(express.json({ limit: "16kb" }));
+app.use(
+	"/static",
+	express.static(path.resolve(process.cwd(), "src", "public")),
+);
 app.disable("x-powered-by");
 
 websocketManager.start();
@@ -46,8 +54,8 @@ async function main() {
 	await discordIntegration.initialize();
 
 	app.listen(APP_PORT, () => {
-		console.log(`HTTP backend running on port ${APP_PORT}`);
-		console.log(`WebSocket server running on port ${WS_PORT}`);
+		logger.info(`HTTP backend running on port ${APP_PORT}`);
+		logger.info(`WebSocket server running on port ${WS_PORT}`);
 	});
 }
 

@@ -1,8 +1,11 @@
 import type WebsocketConnection from "ws";
+import { Logger } from "../../services/Logger.js";
 import type { InMemorySocket } from "../infra/InMemorySocketConnections.js";
 import type { ClosedWebSocketHandlerService } from "./ClosedWebSocketHandlerService.js";
 
 export class RegisterWebSocketService {
+	private readonly logger = new Logger("RegisterWebSocketService");
+
 	constructor(
 		private readonly inMemorySocket: InMemorySocket,
 		private readonly closedWebSocketHandlerService: ClosedWebSocketHandlerService,
@@ -12,14 +15,13 @@ export class RegisterWebSocketService {
 		const existingSocket = this.inMemorySocket.getSocket(userId);
 
 		if (existingSocket && existingSocket !== websocketConnection) {
-			console.warn(`🔁 Replacing existing socket for user ID: ${userId}`);
+			this.logger.warn("Replacing existing socket for user");
+			this.logger.debug("Replacing existing socket for user ID", userId);
 			try {
 				existingSocket.close();
 			} catch (error) {
-				console.error(
-					`Failed to close existing socket for user ID: ${userId}`,
-					error,
-				);
+				this.logger.error("Failed to close existing socket for user", error);
+				this.logger.debug("Failed socket user ID", userId);
 			}
 
 			this.inMemorySocket.removeSocket(userId);
@@ -27,12 +29,16 @@ export class RegisterWebSocketService {
 
 		this.inMemorySocket.addSocket(userId, websocketConnection);
 
-		console.log(`✅ Registered WS for user ID: ${userId}`);
-		console.log("Active sockets:", [
+		this.logger.info("WebSocket registered for user");
+		this.logger.debug("Registered WS for user ID", userId);
+		this.logger.debug("Active sockets", [
 			...this.inMemorySocket.getSockets().keys(),
 		]);
 
-		console.info(`Registering close connection handler for user ID: ${userId}`);
+		this.logger.debug(
+			"Registering close connection handler for user ID",
+			userId,
+		);
 		this.closedWebSocketHandlerService.execute(userId, websocketConnection);
 	}
 }

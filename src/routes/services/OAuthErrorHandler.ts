@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { Logger } from "../../services/Logger.js";
 import type { InMemorySocket } from "../../websocket/infra/InMemorySocketConnections.js";
 
 type OAuthErrorParams = {
@@ -8,15 +9,20 @@ type OAuthErrorParams = {
 };
 
 export class OAuthErrorHandler {
+	private readonly logger = new Logger("OAuthErrorHandler");
+
 	constructor(private readonly inMemorySocket: InMemorySocket) {}
 
 	public execute(
 		{ error, errorDescription, pluginUserId }: OAuthErrorParams,
 		res: Response,
 	) {
-		console.error(
-			`OAuth error for user ${pluginUserId}: ${error}${errorDescription ? ` - ${errorDescription}` : ""}`,
-		);
+		this.logger.warn("OAuth authorization error received");
+		this.logger.debug("OAuth error detail", {
+			pluginUserId,
+			error,
+			errorDescription,
+		});
 
 		const socket = this.inMemorySocket.getSocket(pluginUserId);
 
@@ -30,7 +36,8 @@ export class OAuthErrorHandler {
 				}),
 			);
 
-			console.log(`Sent authError WS event to ${pluginUserId}`);
+			this.logger.info("Sent authError WS event to plugin user");
+			this.logger.debug("Plugin user ID", pluginUserId);
 		}
 
 		return res.status(400).json({
